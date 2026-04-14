@@ -3,43 +3,8 @@ import { registry } from "@web/core/registry";
 import { browser } from "@web/core/browser/browser";
 import { _t } from "@web/core/l10n/translation";
 import { session } from "@web/session";
-import { user } from "@web/core/user";
-import { DbInfoSection } from "./db_info_component";
 
 const userMenuRegistry = registry.category("user_menuitems");
-
-// Preload group check (resolved on first menu open)
-let _isDbUser = null;
-let _isDbManager = null;
-async function _checkGroups() {
-    if (_isDbUser === null) {
-        [_isDbUser, _isDbManager] = await Promise.all([
-            user.hasGroup("sm_db_manager.group_db_manager_user"),
-            user.hasGroup("sm_db_manager.group_db_manager_manager"),
-        ]);
-    }
-}
-// Eagerly preload so the value is ready when menu opens
-_checkGroups();
-
-// ── Separator before DB section ──
-function dbSeparator(env) {
-    return {
-        type: "separator",
-        sequence: 80,
-        show: () => _isDbUser,
-    };
-}
-
-// ── #2 - DB Info Component (shows DB name, size, last backup) ──
-function dbInfoItem(env) {
-    return {
-        type: "component",
-        contentComponent: DbInfoSection,
-        sequence: 81,
-        show: () => _isDbUser,
-    };
-}
 
 // ── Progress overlay helpers ──
 function _createProgressOverlay(dbName) {
@@ -97,7 +62,6 @@ function _animateProgress(overlay, token, onComplete) {
         }
     }, 500);
 
-    // Fallback: remove overlay after 2 minutes if cookie never arrives
     setTimeout(() => {
         clearInterval(progressInterval);
         clearInterval(cookieInterval);
@@ -105,8 +69,73 @@ function _animateProgress(overlay, token, onComplete) {
     }, 120000);
 }
 
+// Cache for group checks
+let _groupsChecked = false;
+let _isDbUser = false;
+let _isDbManager = false;
+
+async function _ensureGroups(env) {
+    if (_groupsChecked) return;
+    _groupsChecked = true;
+    try {
+        const results = await Promise.all([
+            env.services.user.hasGroup("sm_db_manager.group_db_manager_user"),
+            env.services.user.hasGroup("sm_db_manager.group_db_manager_manager"),
+        ]);
+        _isDbUser = results[0];
+        _isDbManager = results[1];
+    } catch {
+        _isDbUser = false;
+        _isDbManager = false;
+    }
+}
+
+// ── Separator before DB section ──
+function dbSeparator(env) {
+    _ensureGroups(env);
+    return {
+        type: "separator",
+        sequence: 80,
+        hide: !_isDbUser,
+    };
+}
+
+// ── #2 - DB Info (shown as text item) ──
+function dbInfoItem(env) {
+    _ensureGroups(env);
+    const dbName = session.db || "unknown";
+    return {
+        type: "item",
+        id: "db_info",
+        description: _t("DB: %s", dbName),
+        callback: async () => {
+            // Fetch and display DB info via notification
+            try {
+                const result = await env.services.rpc("/sm_db_manager/db_info", {});
+                if (result && !result.error) {
+                    let msg = `DB: ${result.db_name} (${result.db_size_human})`;
+                    if (result.last_backup) {
+                        msg += `\nLast backup: ${result.last_backup}`;
+                        if (result.last_backup_user) {
+                            msg += ` by ${result.last_backup_user}`;
+                        }
+                    } else {
+                        msg += "\nNo backup yet";
+                    }
+                    env.services.notification.add(msg, { type: "info", sticky: true });
+                }
+            } catch {
+                env.services.notification.add(_t("Failed to load DB info"), { type: "danger" });
+            }
+        },
+        sequence: 81,
+        hide: !_isDbUser,
+    };
+}
+
 // ── #1 - Quick Backup (ZIP) ──
 function quickBackupItem(env) {
+    _ensureGroups(env);
     return {
         type: "item",
         id: "quick_backup",
@@ -115,7 +144,6 @@ function quickBackupItem(env) {
             const token = `bk_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
             const dbName = session.db || "";
 
-            // Show progress overlay
             const overlay = _createProgressOverlay(dbName);
             _animateProgress(overlay, token, () => {
                 env.services.notification.add(_t("Backup completed!"), {
@@ -123,7 +151,6 @@ function quickBackupItem(env) {
                 });
             });
 
-            // Submit form to hidden iframe
             const iframe = document.createElement("iframe");
             iframe.name = "sm_backup_frame";
             iframe.style.display = "none";
@@ -148,18 +175,18 @@ function quickBackupItem(env) {
             form.submit();
             document.body.removeChild(form);
 
-            // Cleanup iframe later
             setTimeout(() => {
                 if (iframe.parentNode) iframe.remove();
             }, 120000);
         },
         sequence: 82,
-        show: () => _isDbManager,
+        hide: !_isDbManager,
     };
 }
 
 // ── #6 - Copy DB Name to Clipboard ──
 function copyDbNameItem(env) {
+    _ensureGroups(env);
     const dbName = session.db || "";
     return {
         type: "item",
@@ -179,12 +206,13 @@ function copyDbNameItem(env) {
             }
         },
         sequence: 83,
-        show: () => _isDbUser,
+        hide: !_isDbUser,
     };
 }
 
 // ── Database Manager (open in new tab) ──
 function databaseManagerItem(env) {
+    _ensureGroups(env);
     const databaseURL = "/web/database/manager";
     return {
         type: "item",
@@ -195,13 +223,12 @@ function databaseManagerItem(env) {
             browser.open(databaseURL, "_blank");
         },
         sequence: 84,
-        show: () => _isDbManager,
+        hide: !_isDbManager,
     };
 }
 
-userMenuRegistry
-    .add("db_separator", dbSeparator)
-    .add("db_info", dbInfoItem)
-    .add("quick_backup", quickBackupItem)
-    .add("copy_db_name", copyDbNameItem)
-    .add("database_manager", databaseManagerItem);
+userMenuRegistry.add("db_separator", dbSeparator);
+userMenuRegistry.add("db_info", dbInfoItem);
+userMenuRegistry.add("quick_backup", quickBackupItem);
+userMenuRegistry.add("copy_db_name", copyDbNameItem);
+userMenuRegistry.add("database_manager", databaseManagerItem);

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 {
     'name': 'Database Manager Menu',
-    'version': '18.0.1.1.0',
+    'version': '17.0.1.1.0',
     'summary': 'Quick access to Database Manager, backup with progress bar, and DB info from user menu',
     'description': 'Adds Database Manager shortcuts to the user dropdown menu with '
                    'role-based access control (User/Manager levels). Features include: '
@@ -19,9 +19,7 @@
     'assets': {
         'web.assets_backend': [
             'sm_db_manager/static/src/css/backup_progress.css',
-            'sm_db_manager/static/src/js/db_info_component.js',
             'sm_db_manager/static/src/js/db_manager_menu.js',
-            'sm_db_manager/static/src/xml/db_info_component.xml',
         ],
     },
     'images': ['static/description/banner.gif'],
