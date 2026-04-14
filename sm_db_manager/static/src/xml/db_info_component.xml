@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <t t-name="sm_db_manager.DbInfoSection">
+        <div class="px-3 py-2 text-muted small border-bottom">
+            <div class="fw-bold mb-1 text-body">
+                <i class="fa fa-database me-1"/>Database Info
+            </div>
+            <div class="d-flex align-items-center gap-1">
+                <span>DB:</span>
+                <span class="text-body fw-semibold" t-esc="state.dbName"/>
+                <span t-if="state.dbSize" class="text-muted">(<t t-esc="state.dbSize"/> raw)</span>
+            </div>
+            <div t-if="state.dbSize" class="text-muted" style="font-size: 0.75em;">
+                Backup file will be smaller due to compression
+            </div>
+            <div t-if="state.lastBackup" class="mt-1 text-success">
+                <i class="fa fa-check-circle me-1"/>
+                Last backup: <t t-esc="state.lastBackupText"/>
+                <span t-if="state.lastBackupUser" class="text-muted"> by <t t-esc="state.lastBackupUser"/></span>
+            </div>
+            <div t-elif="state.loaded" class="mt-1 text-warning">
+                <i class="fa fa-exclamation-triangle me-1"/>No backup recorded
+            </div>
+            <div t-elif="!state.loaded" class="mt-1">
+                <i class="fa fa-spinner fa-spin me-1"/>Loading...
+            </div>
+        </div>
+    </t>
+
+</templates>

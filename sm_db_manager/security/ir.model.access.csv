@@ -1,0 +1,3 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_sm_db_backup_log_user,sm.db.backup.log user,model_sm_db_backup_log,sm_db_manager.group_db_manager_user,1,0,0,0
+access_sm_db_backup_log_manager,sm.db.backup.log manager,model_sm_db_backup_log,sm_db_manager.group_db_manager_manager,1,1,1,1

@@ -1,0 +1,54 @@
+.sm_backup_progress_overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    background: rgba(0, 0, 0, 0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: smFadeIn 0.2s ease;
+}
+
+.sm_backup_progress_dialog {
+    background: #fff;
+    border-radius: 12px;
+    padding: 32px 40px;
+    text-align: center;
+    min-width: 340px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    animation: smSlideUp 0.3s ease;
+}
+
+.sm_backup_progress_icon {
+    animation: smPulse 1.5s ease-in-out infinite;
+}
+
+.sm_backup_progress_bar_wrap {
+    width: 100%;
+    height: 8px;
+    background: #e9ecef;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.sm_backup_progress_bar {
+    height: 100%;
+    background: linear-gradient(90deg, #714B67, #9b6d8e);
+    border-radius: 4px;
+    transition: width 0.3s ease;
+}
+
+@keyframes smFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes smSlideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes smPulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.1); opacity: 0.7; }
+}
