@@ -53,7 +53,7 @@ class SmDbManagerController(http.Controller):
 
         return response
 
-    @http.route('/sm_db_manager/db_info', type='jsonrpc', auth='user')
+    @http.route('/sm_db_manager/db_info', type='json', auth='user')
     def get_db_info(self):
         if not request.env.user.has_group('sm_db_manager.group_db_manager_user'):
             return {'error': 'Access Denied'}
