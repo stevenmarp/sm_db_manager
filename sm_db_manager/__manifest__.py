@@ -24,6 +24,7 @@
             'sm_db_manager/static/src/xml/db_info_component.xml',
         ],
     },
+    'images': ['static/description/banner.gif'],
     'installable': True,
     'auto_install': False,
     'application': False,
