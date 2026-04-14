@@ -1,7 +1,6 @@
 /** @odoo-module **/
 import { registry } from "@web/core/registry";
 import { browser } from "@web/core/browser/browser";
-import { _t } from "@web/core/l10n/translation";
 import { session } from "@web/session";
 
 const userMenuRegistry = registry.category("user_menuitems");
@@ -107,7 +106,7 @@ function dbInfoItem(env) {
     return {
         type: "item",
         id: "db_info",
-        description: _t("DB: %s", dbName),
+        description: env._t("DB: ") + dbName,
         callback: async () => {
             // Fetch and display DB info via notification
             try {
@@ -125,7 +124,7 @@ function dbInfoItem(env) {
                     env.services.notification.add(msg, { type: "info", sticky: true });
                 }
             } catch {
-                env.services.notification.add(_t("Failed to load DB info"), { type: "danger" });
+                env.services.notification.add(env._t("Failed to load DB info"), { type: "danger" });
             }
         },
         sequence: 81,
@@ -139,14 +138,14 @@ function quickBackupItem(env) {
     return {
         type: "item",
         id: "quick_backup",
-        description: _t("Quick Backup (ZIP)"),
+        description: env._t("Quick Backup (ZIP)"),
         callback: () => {
             const token = `bk_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
             const dbName = session.db || "";
 
             const overlay = _createProgressOverlay(dbName);
             _animateProgress(overlay, token, () => {
-                env.services.notification.add(_t("Backup completed!"), {
+                env.services.notification.add(env._t("Backup completed!"), {
                     type: "success",
                 });
             });
@@ -191,16 +190,16 @@ function copyDbNameItem(env) {
     return {
         type: "item",
         id: "copy_db_name",
-        description: _t("Copy DB Name"),
+        description: env._t("Copy DB Name"),
         callback: async () => {
             try {
                 await browser.navigator.clipboard.writeText(dbName);
                 env.services.notification.add(
-                    _t("Copied: %s", dbName),
+                    env._t("Copied: ") + dbName,
                     { type: "success" }
                 );
             } catch {
-                env.services.notification.add(_t("Failed to copy"), {
+                env.services.notification.add(env._t("Failed to copy"), {
                     type: "danger",
                 });
             }
@@ -217,7 +216,7 @@ function databaseManagerItem(env) {
     return {
         type: "item",
         id: "database_manager",
-        description: _t("Database Manager"),
+        description: env._t("Database Manager"),
         href: databaseURL,
         callback: () => {
             browser.open(databaseURL, "_blank");
